@@ -30,6 +30,7 @@ var publicMethods = []string{
 	"Assets",
 	"AssetPairs",
 	"Ticker",
+	"OHLC",
 	"Depth",
 	"Trades",
 	"Spread",
@@ -169,6 +170,127 @@ func (api *KrakenApi) Balance() (*BalanceResponse, error) {
 	}
 
 	return resp.(*BalanceResponse), nil
+}
+
+// OpenOrders returns all open orders
+func (api *KrakenApi) OpenOrders(args map[string]string) (*OpenOrdersResponse, error) {
+	params := url.Values{}
+	if value, ok := args["trades"]; ok {
+		params.Add("trades", value)
+	}
+	if value, ok := args["userref"]; ok {
+		params.Add("userref", value)
+	}
+
+	resp, err := api.queryPrivate("OpenOrders", params, &OpenOrdersResponse{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.(*OpenOrdersResponse), nil
+}
+
+// ClosedOrders returns all closed orders
+func (api *KrakenApi) ClosedOrders(args map[string]string) (*ClosedOrdersResponse, error) {
+	params := url.Values{}
+	if value, ok := args["trades"]; ok {
+		params.Add("trades", value)
+	}
+	if value, ok := args["userref"]; ok {
+		params.Add("userref", value)
+	}
+	if value, ok := args["start"]; ok {
+		params.Add("start", value)
+	}
+	if value, ok := args["end"]; ok {
+		params.Add("end", value)
+	}
+	if value, ok := args["ofs"]; ok {
+		params.Add("ofs", value)
+	}
+	if value, ok := args["closetime"]; ok {
+		params.Add("closetime", value)
+	}
+	resp, err := api.queryPrivate("ClosedOrders", params, &ClosedOrdersResponse{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.(*ClosedOrdersResponse), nil
+}
+
+// CancelOrder cancels order
+func (api *KrakenApi) CancelOrder(args map[string]string) (*CancelOrderResponse, error) {
+	params := url.Values{}
+	if value, ok := args["txid"]; ok {
+		params.Add("txid", value)
+	}
+	resp, err := api.queryPrivate("CancelOrder", params, &CancelOrderResponse{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.(*CancelOrderResponse), nil
+}
+
+// AddOrder adds new order
+func (api *KrakenApi) AddOrder(args map[string]string) (*AddOrderResponse, error) {
+	params := url.Values{}
+	if value, ok := args["pair"]; ok {
+		params.Add("pair", value)
+	}
+	if value, ok := args["type"]; ok {
+		params.Add("type", value)
+	}
+	if value, ok := args["ordertype"]; ok {
+		params.Add("ordertype", value)
+	}
+	if value, ok := args["price"]; ok {
+		params.Add("price", value)
+	}
+	if value, ok := args["price"]; ok {
+		params.Add("price", value)
+	}
+	if value, ok := args["price2"]; ok {
+		params.Add("price2", value)
+	}
+	if value, ok := args["volume"]; ok {
+		params.Add("volume", value)
+	}
+	if value, ok := args["leverage"]; ok {
+		params.Add("leverage", value)
+	}
+	if value, ok := args["oflags"]; ok {
+		params.Add("oflags", value)
+	}
+	if value, ok := args["starttm"]; ok {
+		params.Add("starttm", value)
+	}
+	if value, ok := args["expiretm"]; ok {
+		params.Add("expiretm", value)
+	}
+	if value, ok := args["validate"]; ok {
+		params.Add("validate", value)
+	}
+	if value, ok := args["close_order_type"]; ok {
+		params.Add("close[ordertype]", value)
+	}
+	if value, ok := args["close_price"]; ok {
+		params.Add("close[price]", value)
+	}
+	if value, ok := args["close_price2"]; ok {
+		params.Add("close[price2]", value)
+	}
+	resp, err := api.queryPrivate("AddOrder", params, &AddOrderResponse{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.(*AddOrderResponse), nil
 }
 
 // Query sends a query to Kraken api for given method and parameters
