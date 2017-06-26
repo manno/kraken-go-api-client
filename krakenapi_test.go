@@ -5,6 +5,10 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"net/http/httptest"
+	"net/http"
+	"fmt"
+	"io/ioutil"
 )
 
 var publicAPI = New("", "")
@@ -112,4 +116,110 @@ func TestQueryTrades(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestOpenOrdersTrailingStop(t *testing.T) {
+	fixture := "./fixtures/open_orders_trailing_limit.json"
+	resp, err := ioutil.ReadFile(fixture)
+	if err != nil {
+		t.Fatalf("Could not open fixture file %s", fixture)
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, string(resp))
+	}))
+	defer ts.Close()
+
+	privateAPI := NewWithClient("", "", http.DefaultClient, &Config{
+		url: ts.URL,
+		apiversion: "0",
+		ua: "Kraken GO API Agent test mode",
+	})
+	orders, err := privateAPI.OpenOrders(map[string]string{})
+
+	if err != nil {
+		t.Errorf("Got err for OpenOrders fetch: %s", err)
+	}
+
+	if len(orders.Open) != 1 {
+		t.Errorf("Expected 1 open order got %d", len(orders.Open))
+	}
+
+	for id, order := range orders.Open {
+		if id != "OHHGPP-NNI55-B4POPF" {
+			t.Errorf("Unexpected order id")
+		}
+
+		if order.OpenTime != 1498459388.1265 {
+			t.Errorf("Unexpected OpenTime")
+		}
+
+		if order.Description.PrimaryPrice != "-5.0000%" {
+			t.Errorf("Unexpected PrimaryPrice in Description object")
+		}
+
+		if order.Description.SecondaryPrice != "-0.10000" {
+			t.Errorf("Unexpected SecondaryPrice in Description object")
+		}
+	}
+
+	// uncomment for debugging
+	//j, err := json.Marshal(orders)
+	//if err != nil {
+	//	t.Errorf("Got err while marshalling orders: %s", err)
+	//}
+	//fmt.Printf("OpenOrders %s\n", string(j))
+}
+
+func TestOpenOrdersLimit(t *testing.T) {
+	fixture := "./fixtures/open_orders_limit.json"
+	resp, err := ioutil.ReadFile(fixture)
+	if err != nil {
+		t.Fatalf("Could not open fixture file %s", fixture)
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, string(resp))
+	}))
+	defer ts.Close()
+
+	privateAPI := NewWithClient("", "", http.DefaultClient, &Config{
+		url: ts.URL,
+		apiversion: "0",
+		ua: "Kraken GO API Agent test mode",
+	})
+	orders, err := privateAPI.OpenOrders(map[string]string{})
+
+	if err != nil {
+		t.Errorf("Got err for OpenOrders fetch: %s", err)
+	}
+
+	if len(orders.Open) != 1 {
+		t.Errorf("Expected 1 open order got %d", len(orders.Open))
+	}
+
+	for id, order := range orders.Open {
+		if id != "OXVBVJ-EJOZJ-UP5E23" {
+			t.Errorf("Unexpected order id")
+		}
+
+		if order.OpenTime != 1498464661.5428 {
+			t.Errorf("Unexpected OpenTime")
+		}
+
+		if order.Description.PrimaryPrice != "320.00000" {
+			t.Errorf("Unexpected PrimaryPrice in Description object")
+		}
+
+		if order.Description.SecondaryPrice != "0" {
+			t.Errorf("Unexpected SecondaryPrice in Description object")
+		}
+	}
+
+	// uncomment for debugging
+	//j, err := json.Marshal(orders)
+	//if err != nil {
+	//	t.Errorf("Got err while marshalling orders: %s", err)
+	//}
+	//fmt.Printf("OpenOrders %s\n", string(j))
 }

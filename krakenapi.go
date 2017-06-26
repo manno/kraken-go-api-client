@@ -58,15 +58,26 @@ type KrakenApi struct {
 	key    string
 	secret string
 	client *http.Client
+	config *Config
+}
+
+type Config struct {
+	url        string
+	apiversion string
+	ua         string
 }
 
 // New creates a new Kraken API client
 func New(key, secret string) *KrakenApi {
-	return NewWithClient(key, secret, http.DefaultClient)
+	return NewWithClient(key, secret, http.DefaultClient, &Config{
+		url: APIURL,
+		apiversion: APIVersion,
+		ua: APIUserAgent,
+	})
 }
 
-func NewWithClient(key, secret string, httpClient *http.Client) *KrakenApi {
-	return &KrakenApi{key, secret, httpClient}
+func NewWithClient(key, secret string, httpClient *http.Client, config *Config) *KrakenApi {
+	return &KrakenApi{key, secret, httpClient, config}
 }
 
 // Time returns the server's time
@@ -312,7 +323,7 @@ func (api *KrakenApi) Query(method string, data map[string]string) (interface{},
 
 // Execute a public method query
 func (api *KrakenApi) queryPublic(method string, values url.Values, typ interface{}) (interface{}, error) {
-	url := fmt.Sprintf("%s/%s/public/%s", APIURL, APIVersion, method)
+	url := fmt.Sprintf("%s/%s/public/%s", api.config.url, api.config.apiversion, method)
 	resp, err := api.doRequest(url, values, nil, typ)
 
 	return resp, err
@@ -320,8 +331,8 @@ func (api *KrakenApi) queryPublic(method string, values url.Values, typ interfac
 
 // queryPrivate executes a private method query
 func (api *KrakenApi) queryPrivate(method string, values url.Values, typ interface{}) (interface{}, error) {
-	urlPath := fmt.Sprintf("/%s/private/%s", APIVersion, method)
-	reqURL := fmt.Sprintf("%s%s", APIURL, urlPath)
+	urlPath := fmt.Sprintf("/%s/private/%s", api.config.apiversion, method)
+	reqURL := fmt.Sprintf("%s%s", api.config.url, urlPath)
 	secret, _ := base64.StdEncoding.DecodeString(api.secret)
 	values.Set("nonce", fmt.Sprintf("%d", time.Now().UnixNano()))
 
@@ -348,7 +359,7 @@ func (api *KrakenApi) doRequest(reqURL string, values url.Values, headers map[st
 		return nil, fmt.Errorf("Could not execute request! (%s)", err.Error())
 	}
 
-	req.Header.Add("User-Agent", APIUserAgent)
+	req.Header.Add("User-Agent", api.config.ua)
 	for key, value := range headers {
 		req.Header.Add(key, value)
 	}
