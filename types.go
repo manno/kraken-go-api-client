@@ -349,8 +349,8 @@ type OrderDescription struct {
 	Leverage       string  `json:"leverage"`
 	Order          string  `json:"order"`
 	OrderType      string  `json:"ordertype"`
-	PrimaryPrice   float64 `json:"price,string"`
-	SecondaryPrice float64 `json:"price2,string"`
+	PrimaryPrice   string  `json:"price"`
+	SecondaryPrice string  `json:"price2"`
 	Type           string  `json:"type"`
 }
 
@@ -369,7 +369,7 @@ type Order struct {
 	Cost           float64          `json:"cost,string"`
 	Fee            float64          `json:"fee,string"`
 	Price          float64          `json:"price,string"`
-	StopPrice      float64          `json:"stopprice"`
+	StopPrice      float64          `json:"stopprice,string"`
 	LimitPrice     float64          `json:"limitprice"`
 	Misc           string           `json:"misc"`
 	OrderFlags     string           `json:"oflags"`
